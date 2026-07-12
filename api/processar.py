@@ -9,7 +9,8 @@ Faz: trava status=processando -> gera PDF -> sobe no Supabase Storage
 
 Variáveis de ambiente (Vercel -> Settings -> Environment Variables):
   SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_BUCKET(=certificados),
-  RESEND_API_KEY, EMAIL_FROM (ex.: "Trinca Brasil <contato@seudominio.com>")
+  BREVO_API_KEY, EMAIL_FROM (ex.: henrique.linux@gmail.com),
+  EMAIL_FROM_NAME (ex.: "Trinca Brasil")
 """
 
 import base64
@@ -157,7 +158,7 @@ def sb_upload(path, data):
     return f"{SB_URL}/storage/v1/object/public/{BUCKET}/{path}"
 
 
-# ---------------- e-mail via Resend (HTTP) ----------------
+# ---------------- e-mail via Brevo (HTTP) ----------------
 EMAIL_ASSUNTO = "Seu certificado — Oficina de Choro | Trinca Brasil"
 
 
@@ -174,24 +175,25 @@ def corpo_email(nome):
 
 
 def enviar_email(destino, nome, pdf_bytes, nome_arq):
-    key = os.environ.get("RESEND_API_KEY")
-    remetente = os.environ.get("EMAIL_FROM", "Trinca Brasil <onboarding@resend.dev>")
+    key = os.environ.get("BREVO_API_KEY")
+    from_email = os.environ.get("EMAIL_FROM", "henrique.linux@gmail.com")
+    from_nome = os.environ.get("EMAIL_FROM_NAME", "Trinca Brasil")
     if not key:
-        raise RuntimeError("RESEND_API_KEY não configurada")
+        raise RuntimeError("BREVO_API_KEY não configurada")
     r = requests.post(
-        "https://api.resend.com/emails",
-        headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+        "https://api.brevo.com/v3/smtp/email",
+        headers={"api-key": key, "Content-Type": "application/json", "accept": "application/json"},
         json={
-            "from": remetente,
-            "to": [destino],
+            "sender": {"name": from_nome, "email": from_email},
+            "to": [{"email": destino}],
             "subject": EMAIL_ASSUNTO,
-            "text": corpo_email(nome),
-            "attachments": [{"filename": nome_arq, "content": base64.b64encode(pdf_bytes).decode()}],
+            "textContent": corpo_email(nome),
+            "attachment": [{"name": nome_arq, "content": base64.b64encode(pdf_bytes).decode()}],
         },
         timeout=30,
     )
     if r.status_code >= 300:
-        raise RuntimeError(f"Resend {r.status_code}: {r.text[:300]}")
+        raise RuntimeError(f"Brevo {r.status_code}: {r.text[:300]}")
 
 
 # ---------------- ciclo completo ----------------
