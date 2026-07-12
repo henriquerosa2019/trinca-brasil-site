@@ -1040,7 +1040,34 @@
     if(!iso)return'';const[a,m,d]=iso.split('-');return `${d}/${m}/${a}`;
   }
 
-  document.getElementById('certSubmit').addEventListener('click',()=>{
+  // ================= Supabase =================
+  // Preencha com os dados do seu projeto (Settings -> API):
+  const SUPABASE_URL  = 'https://pyydnicvltkioovtvzfk.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5eWRuaWN2bHRraW9vdnR2emZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTUwMzEsImV4cCI6MjA5MDYzMTAzMX0.-_d2zNCPnoNPJBaGnc2JUmq_uj2Xi7FUETQC-ViQ4Ew';
+  async function enviarSupabase(pedido){
+    if(SUPABASE_ANON.indexOf('__')===0) return;    // chave ainda não configurada: ignora
+    const resp = await fetch(SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/solicitacoes_certificado',{
+      method:'POST',
+      headers:{
+        'apikey':SUPABASE_ANON,
+        'Authorization':'Bearer '+SUPABASE_ANON,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify({
+        nome:pedido.Nome,
+        cpf:pedido.CPF,
+        email:pedido['E-mail'],
+        carga_horaria:pedido['Carga horária'],
+        endereco:pedido.Endereço,
+        data_oficina:pedido.Data,
+        ano:pedido.Ano
+      })
+    });
+    if(!resp.ok){ throw new Error('Supabase '+resp.status+' '+(await resp.text())); }
+  }
+
+  document.getElementById('certSubmit').addEventListener('click',async ()=>{
     let ok=true;
     Object.values(fields).forEach(f=>{
       const valid=f.test(f.el.value);
@@ -1069,6 +1096,12 @@
       Ano:iso?iso.split('-')[0]:'',
       'Solicitado em':new Date().toLocaleString('pt-BR')
     };
+    const _btn=document.getElementById('certSubmit');
+    const _rot=_btn.textContent;_btn.disabled=true;_btn.textContent='Enviando...';
+    try{ await enviarSupabase(pedido); }
+    catch(err){ console.warn('Falha ao enviar ao Supabase:',err); }
+    _btn.disabled=false;_btn.textContent=_rot;
+
     pedidos.push(pedido);save();renderOrg();
 
     document.getElementById('successMsg').textContent=
