@@ -1,5 +1,5 @@
 {
   "functions": {
-    "api/processar.py": { "maxDuration": 30 }
+    "api/processar.py": { "maxDuration": 60 }
   }
 }
