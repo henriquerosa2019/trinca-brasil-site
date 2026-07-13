@@ -222,13 +222,22 @@ def processar(body):
         path = f"{ano}/{rid}.pdf"
         pdf_url = sb_upload(path, pdf)
 
-        nome_arq = "Certificado - " + limpa_nome(rec.get("nome", "")) + ".pdf"
-        enviar_email(rec.get("email"), rec.get("nome", ""), pdf, nome_arq)
-
+        # marca ENVIADO já aqui (o e-mail, que é a parte demorada, vem depois)
         sb_patch(rid, {
             "status": "enviado", "pdf_url": pdf_url, "storage_path": path,
             "enviado_em": datetime.datetime.now(datetime.timezone.utc).isoformat(), "erro": None,
         })
+
+        # envia o e-mail; se falhar, mantém 'enviado' e anota o aviso em 'erro'
+        nome_arq = "Certificado - " + limpa_nome(rec.get("nome", "")) + ".pdf"
+        try:
+            enviar_email(rec.get("email"), rec.get("nome", ""), pdf, nome_arq)
+        except Exception as e_mail:
+            try:
+                sb_patch(rid, {"erro": "aviso e-mail: " + str(e_mail)[:400]})
+            except Exception:
+                pass
+
         return {"ok": True, "status": "enviado", "pdf_url": pdf_url}, 200
     except Exception as e:
         try:
