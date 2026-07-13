@@ -6,13 +6,7 @@
     },
     {
       "src": "api/processar.py",
-      "use": "@vercel/python",
-      "config": {
-        "includeFiles": [
-          "api/modelo_base.png",
-          "api/EBGaramond.ttf"
-        ]
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
