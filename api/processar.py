@@ -250,7 +250,21 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(obj, ensure_ascii=False).encode("utf-8"))
 
     def do_GET(self):
-        self._json({"status": "ok", "servico": "certificados-trinca-brasil"})
+        diag = {"status": "ok", "servico": "certificados-trinca-brasil"}
+        try:
+            pdf = gera_pdf_bytes({"Nome": "Teste", "CPF": "000.000.000-00",
+                                  "Carga": "8 horas", "Endereco": "Teste", "Ano": "2026"})
+            diag["gerar_pdf"] = "ok (" + str(len(pdf)) + " bytes)"
+        except Exception as e:
+            diag["gerar_pdf"] = "ERRO " + type(e).__name__ + ": " + str(e)[:200]
+        diag["env"] = {
+            "SUPABASE_URL": bool(SB_URL),
+            "SUPABASE_SERVICE_KEY": bool(SB_KEY),
+            "BREVO_API_KEY": bool(os.environ.get("BREVO_API_KEY")),
+            "EMAIL_FROM": os.environ.get("EMAIL_FROM", "(vazio)"),
+            "SUPABASE_BUCKET": BUCKET,
+        }
+        self._json(diag)
 
     def do_POST(self):
         try:
