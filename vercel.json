@@ -1,10 +1,32 @@
 {
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "api/processar.py", "use": "@vercel/python", "config": { "includeFiles": "api/**", "maxDuration": 60 } }
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/processar.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": [
+          "api/modelo_base.png",
+          "api/EBGaramond.ttf"
+        ]
+      }
+    }
   ],
   "routes": [
-    { "src": "/api/processar", "methods": ["GET", "POST"], "dest": "/api/processar.py" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/api/processar",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "dest": "/api/processar.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 }
