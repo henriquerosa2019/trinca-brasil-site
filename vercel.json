@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/processar.py": {
+      "maxDuration": 60
+    }
+  }
+}
