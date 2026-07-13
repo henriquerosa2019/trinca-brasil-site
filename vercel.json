@@ -1,0 +1,10 @@
+{
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "api/processar.py", "use": "@vercel/python", "config": { "includeFiles": "api/**", "maxDuration": 60 } }
+  ],
+  "routes": [
+    { "src": "/api/processar", "methods": ["GET", "POST"], "dest": "/api/processar.py" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
